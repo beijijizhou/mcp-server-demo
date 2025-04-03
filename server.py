@@ -1,20 +1,9 @@
 from mcp.server.fastmcp import FastMCP
-import sys
-import os
-
-# Print Python version
-print(f"Python Version: {sys.version}",file=sys.stderr)
-
-# Print Virtual Environment (if any)
-venv = os.environ.get("VIRTUAL_ENV")
-if venv:
-    print(f"Virtual Environment: {venv}",file=sys.stderr)
-else:
-    print("No Virtual Environment Active", file=sys.stderr)
 import requests
+import sys
 from typing import Dict, Any
-mcp = FastMCP("Demo2")
-
+mcp = FastMCP("js_mcp")
+print("MCP server is running", file=sys.stderr)
 
 @mcp.resource("vectors://{query_embedding}")
 def get_vector_data(query_embedding: str) -> Dict[str, Any]:
@@ -28,7 +17,16 @@ def get_vector_data(query_embedding: str) -> Dict[str, Any]:
     except requests.exceptions.RequestException as e:
         return {"error": str(e)}
 
-   
+@mcp.tool()
+def query_vector_database(user_prompt: str) -> Dict[str, Any]:
+    """Fetch vector data based on user input when it is JavaScript related"""
+    embedding_response = get_vector_data(user_prompt)
+    print(embedding_response, file= sys.stderr)
+    if "error" in embedding_response:
+        return {"error": f"Failed to fetch embedding: {embedding_response['error']}"}
+
+    return embedding_response
+    
 
 @mcp.tool()
 def add(a: int, b: int) -> int:
