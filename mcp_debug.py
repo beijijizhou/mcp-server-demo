@@ -3,7 +3,7 @@
 import os
 import sys
 # /Users/hongzhonghu/Library/Logs/Claude
-def debug():
+def error_display():
     print(f"Python Version: {sys.version}",file=sys.stderr)
 
     # Print Virtual Environment (if any)

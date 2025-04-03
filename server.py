@@ -1,13 +1,21 @@
+from mcp_debug import error_display
+from vector_db.client import PineconeConnection
+error_display()
 from mcp.server.fastmcp import FastMCP
 import requests
 import sys
 from typing import Dict, Any
+
+from vector_db.operations import query_vectors
 mcp = FastMCP("js_mcp")
 print("MCP server is running", file=sys.stderr)
+pinecone = PineconeConnection()
+print("Vector db is running", file=sys.stderr)
 
 @mcp.resource("vectors://{query_embedding}")
 def get_vector_data(query_embedding: str) -> Dict[str, Any]:
     """Retrieve vector database results for a given embedding"""
+    return query_vectors(query_embedding)
     rag_api_url = "http://localhost:5000/embed"
 
     try:
