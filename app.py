@@ -2,14 +2,13 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from client import run
-import asyncio
 
 app = FastAPI()
 
 # More specific CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Adjust for your needs
+    allow_origins=["http://localhost:5173"],  # Adjust for your needs
     allow_methods=["GET", "POST"],
     allow_headers=["Content-Type"],
 )
@@ -21,7 +20,7 @@ class QueryRequest(BaseModel):
 async def query_endpoint(query: QueryRequest):
     if not query.prompt.strip():
         raise HTTPException(status_code=400, detail="Prompt cannot be empty")
-    
+    print(query)
     try:
         result = await run(query.prompt)
         # Verify result has expected attribute
