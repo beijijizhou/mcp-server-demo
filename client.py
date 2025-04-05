@@ -97,20 +97,20 @@ async def agent_loop(prompt: str, client: genai.Client, session: ClientSession):
     # --- 5. Return Final Response ---
     return response
         
-async def run():
+async def run(prompt):
     async with stdio_client(js_mcp_server_params) as (read, write):
         async with ClientSession(
             read,
             write,
         ) as session:
             # Test prompt
-            prompt = "what is promise"
             print(f"Running agent loop with prompt: {prompt}")
             # Run agent loop
             res = await agent_loop(prompt, client, session)
+            print(res.text)
             return res
 def main():
     res = asyncio.run(run())
-    print(res.text)
+    
 if __name__ == "__main__":
     main()
