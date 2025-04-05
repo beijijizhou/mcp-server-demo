@@ -16,14 +16,7 @@ print("Vector db is running", file=sys.stderr)
 def get_vector_data(query_embedding: str) -> Dict[str, Any]:
     """Retrieve vector database results for a given embedding"""
     return query_vectors(query_embedding)
-    rag_api_url = "http://localhost:5000/embed"
 
-    try:
-        response = requests.post(rag_api_url, json={"texts": [query_embedding]})
-        response.raise_for_status()  # Raise an error for HTTP errors (4xx, 5xx)
-        return response.json()  # Directly return the parsed JSON response
-    except requests.exceptions.RequestException as e:
-        return {"error": str(e)}
 
 @mcp.tool()
 def query_vector_database(user_prompt: str) -> Dict[str, Any]:
