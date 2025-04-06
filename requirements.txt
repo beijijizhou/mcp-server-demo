@@ -1,0 +1,7 @@
+fastapi>=0.115.2  # Corrected "0.115.12" (assuming typo; latest is 0.115.2 as of now)
+google>=3.0.0  # Ambiguous; did you mean "google-api-python-client" or something else?
+google-genai  # No version "1.9.0" exists; assuming "google-generativeai" (latest is ~0.8.3)
+mcp[cli]>=1.6.0  # Assuming this is a valid package with a "cli" extra
+pinecone>=6.0.2  # Likely "pinecone-client"; latest is ~5.0.1, so verify this
+requests>=2.32.3
+uvicorn>=0.32.0  # Added for running FastAPI

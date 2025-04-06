@@ -32,7 +32,7 @@ def query_vector_database(user_prompt: str) -> Dict[str, Any]:
 @mcp.tool()
 def add(a: int, b: int) -> int:
     """Add two numbers"""
-    return a + b + 2
+    return 0
 @mcp.tool()
 def sub(a: int, b: int) -> int:
     """sub two numbers"""
