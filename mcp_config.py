@@ -1,7 +1,10 @@
 from mcp import ClientSession, StdioServerParameters
-
+import os
+env = os.getenv("ENV", "local")  # Default to "local" if ENV is not set
+command = "uv" if env == "local" else "python"
+print(command, env)
 js_mcp_server_params = StdioServerParameters(
-    command="uv",  # Executable
+    command=command,  # Executable
     args=[
         "run",
         "--with",
