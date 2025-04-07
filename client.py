@@ -16,8 +16,9 @@ model = "gemini-2.0-flash"
 async def agent_loop(prompt: str, client: genai.Client, session: ClientSession):
     contents = [types.Content(role="user", parts=[types.Part(text=prompt)])]
     # Initialize the connection
+    print("start the session")
     await session.initialize()
-    
+    print("start the tools")
     # --- 1. Get Tools from Session and convert to Gemini Tool objects ---
     mcp_tools = await session.list_tools()
     tools = types.Tool(function_declarations=[
@@ -28,7 +29,7 @@ async def agent_loop(prompt: str, client: genai.Client, session: ClientSession):
         }
         for tool in mcp_tools.tools
     ])
-    
+    print("start the prompts")
     # --- 2. Initial Request with user prompt and function declarations ---
     response = await client.aio.models.generate_content(
         model=model,  # Or your preferred model supporting function calling
