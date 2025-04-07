@@ -1,14 +1,25 @@
-
-
 import os
 import sys
-# /Users/hongzhonghu/Library/Logs/Claude
-def error_display():
-    print(f"Python Version: {sys.version}",file=sys.stderr)
+from dotenv import load_dotenv
 
-    # Print Virtual Environment (if any)
+# Load environment variables from .env
+load_dotenv()
+
+# Get environment setting
+env = os.getenv("ENV", "python").lower()  # Default to "python" unless explicitly "local"
+
+def error_display():
+    output = f"Python Version: {sys.version}\n"
+
+    # Check Virtual Environment
     venv = os.environ.get("VIRTUAL_ENV")
-    if venv:
-        print(f"Virtual Environment: {venv}",file=sys.stderr)
+    output += f"Virtual Environment: {venv}" if venv else "No Virtual Environment Active"
+
+    # Print to stderr if local, otherwise normal print
+    if env == "local":
+        print(output, file=sys.stderr)
     else:
-        print("No Virtual Environment Active", file=sys.stderr)
+        print(output)
+
+# Call function to test output
+

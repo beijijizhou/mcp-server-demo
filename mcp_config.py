@@ -11,7 +11,7 @@ js_mcp_server_params = StdioServerParameters(
         "mcp[cli]",
         "mcp",
         "run",
-        "./server.py"
+        "server.py"
     ],  # Optional command line arguments
     env={
         "PINECONE_API_KEY": "pcsk_R5zga_U4X3anECzPmCdT9enskjoGJE7FKUG6qte9LM9PtNWbYXM9Vc6BCFUVYYxxqrjJC",
