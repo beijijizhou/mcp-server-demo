@@ -6,11 +6,11 @@ print(command, env)
 js_mcp_server_params = StdioServerParameters(
     command="python",  # Executable
     args=[
-        "run",
-        "--with",
-        "mcp[cli]",
-        "mcp",
-        "run",
+        # "run",
+        # "--with",
+        # "mcp[cli]",
+        # "mcp",
+        # "run",
         "server.py"
     ],  # Optional command line arguments
     env={
