@@ -8,10 +8,12 @@ app = FastAPI()
 # More specific CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173","https://js-interview-green.vercel.app"],  # Adjust for your needs
-    allow_methods=["GET", "POST"],
-    allow_headers=["Content-Type"],
+    allow_origins=["http://localhost:5173", "https://js-interview-green.vercel.app"],
+    allow_credentials=True,  # Allows cookies/auth headers
+    allow_methods=["*"],  # Allows all HTTP methods
+    allow_headers=["*"],  # Allows all headers
 )
+
 
 class QueryRequest(BaseModel):
     prompt: str
