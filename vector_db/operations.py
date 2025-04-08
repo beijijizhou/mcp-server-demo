@@ -27,7 +27,7 @@ def query_vectors(
             "inputs": {"text": query},
             "top_k": 2
         })
-       
+        
         return response
 
     except Exception as e:
