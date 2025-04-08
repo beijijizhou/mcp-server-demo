@@ -1,22 +1,24 @@
 FROM python:3.13.2-slim
 
-# Set working directory to /app inside the container
 WORKDIR /app
 
-# Install uv
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
-    mv /root/.cargo/bin/uv /usr/local/bin/uv
+# Install curl
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
-# Copy all files from local root to /app in container
+# Install uv and move it from /root/.local/bin/ to /usr/local/bin/
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
+    mv /root/.local/bin/uv /usr/local/bin/uv && \
+    uv --version
+
+# Copy project files
+COPY pyproject.toml .
 COPY . .
 
 # Install dependencies with uv
-RUN uv venv && \
-    . .venv/bin/activate && \
-    uv pip install -r requirements.txt
+RUN uv sync
 
 # Expose port
 EXPOSE 5000
 
-# Run the app (files are in /app)
+# Run with uvicorn from the virtual environment
 CMD [".venv/bin/uvicorn", "app:app", "--host", "0.0.0.0", "--port", "5000"]
