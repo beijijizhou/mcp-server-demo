@@ -8,9 +8,9 @@ from typing import Dict, Any
 
 from vector_db.operations import query_vectors
 mcp = FastMCP("js_mcp")
-print("MCP server is running", file=sys.stderr)
+print("MCP server is running")
 pinecone = PineconeConnection()
-print("Vector db is running", file=sys.stderr)
+print("Vector db is running")
 
 @mcp.resource("vectors://{query_embedding}")
 def get_vector_data(query_embedding: str) -> Dict[str, Any]:
