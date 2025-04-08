@@ -106,15 +106,16 @@ async def run(prompt):
         async with stdio_client(js_mcp_server_params) as (read, write):
             async with ClientSession(read, write) as session:
                 print(f"Running agent loop with prompt: {prompt}")
-                
+                print(f"Client: {client}")
+                print(f"Session: {session}")
+                print(f"params: {js_mcp_server_params}")
                 # Run agent loop
                 res = await agent_loop(prompt, client, session)
                 print(res.text)
                 return res
     except Exception as e:
         print(f"Error occurred: {e}")
-        print(f"Client: {client}")
-        print(f"Session: {session}")
+
         return None  # Return None in case of failure
 
 def main():
