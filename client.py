@@ -16,8 +16,11 @@ model = "gemini-2.0-flash"
 async def agent_loop(prompt: str, client: genai.Client, session: ClientSession):
     contents = [types.Content(role="user", parts=[types.Part(text=prompt)])]
     # Initialize the connection
-    print("start the session")
-    await session.initialize()
+    try:
+        print("Start the session")
+        await session.initialize()
+    except Exception as e:
+        print(f"Error occurred: {e}"),
     print("start the tools")
     # --- 1. Get Tools from Session and convert to Gemini Tool objects ---
     mcp_tools = await session.list_tools()
