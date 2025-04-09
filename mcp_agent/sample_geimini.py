@@ -33,7 +33,7 @@ async def agent_loop(prompt: str, client: genai.Client, session: ClientSession):
     ])
     
     # --- 2. Initial Request with user prompt and function declarations ---
-    response = await client.aio.models.generate_content_stream(
+    response = await client.aio.models.generate_content(
         model=model,  # Or your preferred model supporting function calling
         contents=contents,
         config=types.GenerateContentConfig(
@@ -41,24 +41,14 @@ async def agent_loop(prompt: str, client: genai.Client, session: ClientSession):
             tools=[tools],
         ),  # Example other config
     )
-    function_calls = []
-    async for chunk in response:
-        # print(len(chunk.candidates) > 0)
-        if chunk.candidates[0].content.parts[0].function_call:
-            function_calls = [chunk.candidates[0].content.parts[0].function_call]
-            print(f"Function call: {function_calls}")
-            yield {"function_call": function_calls}
-        elif chunk.text:
-            print(chunk.text)
-            yield {"response": chunk.text}
-            contents.append(types.Content(role="user",
-                            parts=[types.Part(text=chunk.text)]))
-    # --- 3. Append initial response to contents ---
     
+    # --- 3. Append initial response to contents ---
+    contents.append(response.candidates[0].content)
 
     # --- 4. Tool Calling Loop ---            
     turn_count = 0
     max_tool_turns = 5
+    function_calls = response.function_calls
     
     if function_calls:
         turn_count += 1
@@ -124,14 +114,14 @@ async def agent_loop(prompt: str, client: genai.Client, session: ClientSession):
     # --- 5. Return Final Response ---
     return 
         
-async def run(prompt):
+async def run():
     async with stdio_client(js_mcp_server_params) as (read, write):
         async with ClientSession(
             read,
             write,
         ) as session:
             # Test prompt
-            # prompt = "what is promise"
+            prompt = "what is promise"
             print(f"Running agent loop with prompt: {prompt}")
             # Run agent loop
             async for item in agent_loop(prompt, client, session):
