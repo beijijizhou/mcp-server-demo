@@ -1,4 +1,4 @@
-from mcp_debug import error_display
+from mcp_agent.mcp_debug import error_display
 from vector_db.client import PineconeConnection
 error_display()
 from mcp.server.fastmcp import FastMCP

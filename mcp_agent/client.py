@@ -7,7 +7,7 @@ import os
 import asyncio
 from dotenv import load_dotenv
 load_dotenv()
-from mcp_config import js_mcp_server_params
+from mcp_agent.mcp_config import js_mcp_server_params
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 model = "gemini-2.0-flash"
 
