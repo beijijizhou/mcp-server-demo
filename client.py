@@ -13,7 +13,7 @@ model = "gemini-2.0-flash"
 
 
 
-async def agent_loop(prompt: str, client: genai.Client, session: ClientSession):
+async def agent_loop(prompt: str, client: genai.Client, session: ClientSession) -> types.GenerateContentResponse:
     contents = [types.Content(role="user", parts=[types.Part(text=prompt)])]
     # Initialize the connection
     try:
