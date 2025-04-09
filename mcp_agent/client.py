@@ -1,4 +1,4 @@
-from typing import List
+from typing import AsyncGenerator, List
 from google import genai
 from google.genai import types
 from mcp import ClientSession, StdioServerParameters
@@ -34,7 +34,7 @@ async def agent_loop(prompt: str, client: genai.Client, session: ClientSession) 
     ])
     print("start the prompts")
     # --- 2. Initial Request with user prompt and function declarations ---
-    response = await client.aio.models.generate_content(
+    response = await client.aio.models.generate_content_stream(
         model=model,  # Or your preferred model supporting function calling
         contents=contents,
         config=types.GenerateContentConfig(
@@ -42,19 +42,36 @@ async def agent_loop(prompt: str, client: genai.Client, session: ClientSession) 
             tools=[tools],
         ),  # Example other config
     )
-    
-    # --- 3. Append initial response to contents ---
-    contents.append(response.candidates[0].content)
+    function_calls = []  # Collect function calls during streaming
+    try:
+        async for chunk in response:
+            # print(len(chunk.candidates) > 0)
+            if chunk.candidates[0].content.parts[0].function_call:
+                print(chunk.candidates[0].content.parts[0].function_call)
+                function_calls.append(chunk.candidates[0].content.parts[0].function_call)
+                # function_calls.append()
+            elif chunk.text:
+                print(chunk.text)
+                yield {"response": chunk.text}
+                contents.append(types.Content(role="assistant", parts=[types.Part(text=chunk.text)]))
+  
+          
+    except Exception as e:
+        print(f"Error during streaming: {e}")
 
+
+    print("Streaming completed successfully")
+  
     # --- 4. Tool Calling Loop ---            
     turn_count = 0
-    max_tool_turns = 5
-    while response.function_calls and turn_count < max_tool_turns:
+    max_tool_turns = 1
+    print(function_calls)
+    while function_calls and turn_count < max_tool_turns:
         turn_count += 1
         tool_response_parts: List[types.Part] = []
 
         # --- 4.1 Process all function calls in order and return in this turn ---
-        for fc_part in response.function_calls:
+        for fc_part in function_calls:
             tool_name = fc_part.name
             args = fc_part.args or {}  # Ensure args is a dict
             print(f"Attempting to call MCP tool: '{tool_name}' with args: {args}")
@@ -84,24 +101,28 @@ async def agent_loop(prompt: str, client: genai.Client, session: ClientSession) 
 
         # --- 4.3 Make the next call to the model with updated history ---
         print("Making subsequent API call with tool responses...")
-        response = await client.aio.models.generate_content(
-            model=model,
-            contents=contents,  # Send updated history
-            config=types.GenerateContentConfig(
-                temperature=1.0,
-                tools=[tools],
-            ),  # Keep sending same config
-        )
-        contents.append(response.candidates[0].content)
+        try:
+            response = await client.aio.models.generate_content(
+                model=model,
+                contents=contents,  # Send updated history
+                config=types.GenerateContentConfig(
+                    temperature=1.0,
+                    tools=[tools],
+                ),  # Keep sending same config
+            )
+            if response.function_calls:
+                function_calls = response.function_calls
+        except Exception as e:
+            print(f"Error generating content: {e}")
+            response = None 
 
-    if turn_count >= max_tool_turns and response.function_calls:
+    if turn_count >= max_tool_turns:
         print(f"Maximum tool turns ({max_tool_turns}) reached. Exiting loop.")
 
     print("MCP tool calling loop finished. Returning final response.")
     # --- 5. Return Final Response ---
-    return response
         
-async def run(prompt):
+async def run(prompt: str) -> AsyncGenerator[dict, None]:
     try:
         async with stdio_client(js_mcp_server_params) as (read, write):
             async with ClientSession(read, write) as session:
@@ -109,14 +130,12 @@ async def run(prompt):
                 print(f"Client: {client}")
                 print(f"Session: {session}")
                 print(f"params: {js_mcp_server_params}")
-                # Run agent loop
-                res = await agent_loop(prompt, client, session)
-                print(res.text)
-                return res
+                # Iterate over agent_loop's streamed results
+                async for item in agent_loop(prompt, client, session):
+                    yield item
     except Exception as e:
-        print(f"Error occurred: {e}")
-
-        return None  # Return None in case of failure
+        print(f"Error in run: {e}")
+        yield {"error": f"Run function failed: {str(e)}"} # Return None in case of failure
 
 def main():
     res = asyncio.run(run())

@@ -1,4 +1,6 @@
+import json
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from mcp_agent.client import run
@@ -18,25 +20,16 @@ app.add_middleware(
 class QueryRequest(BaseModel):
     prompt: str
 
+async def stream_response(prompt: str):
+    async for item in run(prompt):
+        yield json.dumps(item) + "\n"
+
 @app.post("/query")
 async def query_endpoint(query: QueryRequest):
     if not query.prompt.strip():
         raise HTTPException(status_code=400, detail="Prompt cannot be empty")
     print(query)
-    try:
-        result = await run(query.prompt)
-        # Verify result has expected attribute
-        if not hasattr(result, 'text'):
-            raise ValueError("Invalid response format from run function")
-        return {
-            "response": result.text,
-            "status": "success"
-        }
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Query failed: {str(e)}"
-        )
+    return StreamingResponse(stream_response(query.prompt), media_type="text/event-stream")
 
 @app.get("/health")
 async def health_check():
