@@ -1,4 +1,3 @@
-from mcp_agent.mcp_config import js_mcp_server_params
 from typing import AsyncGenerator, List, Optional
 from google import genai
 from google.genai import types
@@ -11,7 +10,15 @@ from dotenv import load_dotenv
 
 # Assuming handle_streaming_response is in the same file or correctly imported
 # from mcp_agent.stream_handler import handle_streaming_response
-
+server_params = StdioServerParameters(
+    command="npx",  # Executable
+    args=[
+        "-y",
+        "@openbnb/mcp-server-airbnb",
+        "--ignore-robots-txt",
+    ],  # Optional command line arguments
+    env=None,  # Optional environment variables
+)
 load_dotenv()
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 model = "gemini-2.0-flash"
@@ -49,7 +56,7 @@ async def agent_loop(prompt: str, client: genai.Client, session: ClientSession):
     turn_count = 0
     max_tool_turns = 5
     function_calls = response.function_calls
-    
+    print(function_calls)
     if function_calls:
         turn_count += 1
         tool_response_parts: List[types.Part] = []
@@ -115,13 +122,13 @@ async def agent_loop(prompt: str, client: genai.Client, session: ClientSession):
     return 
         
 async def run():
-    async with stdio_client(js_mcp_server_params) as (read, write):
+    async with stdio_client(server_params) as (read, write):
         async with ClientSession(
             read,
             write,
         ) as session:
             # Test prompt
-            prompt = "what is promise"
+            prompt = "I want to book an apartment in Paris for 2 nights. 03/28 - 03/30"
             print(f"Running agent loop with prompt: {prompt}")
             # Run agent loop
             async for item in agent_loop(prompt, client, session):
