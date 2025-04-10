@@ -23,7 +23,7 @@ def get_vector_data(query_embedding: str) -> Dict[str, Any]:
 def query_vector_database(user_prompt: str) -> Dict[str, Any]:
     """Fetch vector data based on user input when it is JavaScript related"""
     embedding_response = get_vector_data(user_prompt)
-    print(embedding_response, file= sys.stderr)
+    # print(embedding_response, file= sys.stderr)
     if "error" in embedding_response:
         return {"error": f"Failed to fetch embedding: {embedding_response['error']}"}
 

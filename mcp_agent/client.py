@@ -33,7 +33,24 @@ async def agent_loop(prompt: str, client: genai.Client, session: ClientSession):
     ])
     
     # --- 2. Initial Request with user prompt and function declarations ---
-    response = await client.aio.models.generate_content(
+    # response = await client.aio.models.generate_content(
+    #     model=model,  # Or your preferred model supporting function calling
+    #     contents=contents,
+    #     config=types.GenerateContentConfig(
+    #         temperature=0,
+    #         tools=[tools],
+    #     ),  # Example other config
+    # )
+
+    # # --- 3. Append initial response to contents ---
+    # # contents.append(response.candidates[0].content)
+    # function_calls = response.function_calls
+    # print(f"\033[92mfunction_calls:\033[0m {function_calls}")  # Green
+
+    # contents.append(response.candidates[0].content)
+
+    
+    stream_response = await client.aio.models._generate_content_stream(
         model=model,  # Or your preferred model supporting function calling
         contents=contents,
         config=types.GenerateContentConfig(
@@ -41,23 +58,30 @@ async def agent_loop(prompt: str, client: genai.Client, session: ClientSession):
             tools=[tools],
         ),  # Example other config
     )
-    
-    # --- 3. Append initial response to contents ---
-    contents.append(response.candidates[0].content)
-    function_calls = response.function_calls
-    # --- 3. Append initial response to contents ---
-    
+    stream_function_calls = None
+   
+    async for chunk in stream_response:
+        # print(chunk.candidates)
+        if chunk.candidates[0].content.parts[0].function_call:
+             stream_function_calls = [chunk.candidates[0].content.parts[0].function_call]
+             print(f"Function call: {stream_function_calls}")
+        elif chunk.text:
+             print(chunk.text)
+             yield {"response": chunk.text}
+             contents.append(types.Content(role="user",
+                             parts=[types.Part(text=chunk.text)]))
+    print(f"\033[94mstream_function_calls:\033[0m {stream_function_calls}")  # Blue
 
     # --- 4. Tool Calling Loop ---            
     turn_count = 0
     max_tool_turns = 5
     
-    if function_calls:
+    if stream_function_calls:
         turn_count += 1
         tool_response_parts: List[types.Part] = []
 
         # --- 4.1 Process all function calls in order and return in this turn ---
-        for fc_part in function_calls:
+        for fc_part in stream_function_calls:
             tool_name = fc_part.name
             args = fc_part.args or {}  # Ensure args is a dict
             print(f"Attempting to call MCP tool: '{tool_name}' with args: {args}")
@@ -98,9 +122,9 @@ async def agent_loop(prompt: str, client: genai.Client, session: ClientSession):
         async for chunk in response:
             # print(len(chunk.candidates) > 0)
             if chunk.candidates[0].content.parts[0].function_call:
-                function_calls = [chunk.candidates[0].content.parts[0].function_call]
-                print(f"Function call: {function_calls}")
-                yield {"function_call": function_calls}
+                stream_function_calls = [chunk.candidates[0].content.parts[0].function_call]
+                print(f"Function call: {stream_function_calls}")
+                yield {"function_call": stream_function_calls}
             elif chunk.text:
                 print(chunk.text)
                 yield {"response": chunk.text}
@@ -109,7 +133,7 @@ async def agent_loop(prompt: str, client: genai.Client, session: ClientSession):
                 
         # contents.append(response.candidates[0].content)
 
-    if turn_count >= max_tool_turns and function_calls:
+    if turn_count >= max_tool_turns and stream_function_calls:
         print(f"Maximum tool turns ({max_tool_turns}) reached. Exiting loop.")
 
     print("MCP tool calling loop finished. Returning final response.")
@@ -127,7 +151,7 @@ async def run(prompt):
             print(f"Running agent loop with prompt: {prompt}")
             # Run agent loop
             async for item in agent_loop(prompt, client, session):
-                print(item)
+                # print(item)
                 yield item
            
 
