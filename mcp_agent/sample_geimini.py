@@ -6,6 +6,7 @@ from mcp.client.stdio import stdio_client
 import os
 import asyncio
 from dotenv import load_dotenv
+from rich import print
 
 
 # Assuming handle_streaming_response is in the same file or correctly imported
@@ -51,6 +52,9 @@ async def agent_loop(prompt: str, client: genai.Client, session: ClientSession):
     
     # --- 3. Append initial response to contents ---
     contents.append(response.candidates[0].content)
+    print("[yellow]contents:[/yellow]", contents)
+    print("[red]response.candidates[0].content:[/red]", response.candidates[0].content)
+    print("[yellow]contents:[/yellow]", contents)
 
     # --- 4. Tool Calling Loop ---            
     turn_count = 0
@@ -107,7 +111,7 @@ async def agent_loop(prompt: str, client: genai.Client, session: ClientSession):
                 print(f"Function call: {function_calls}")
                 # yield {"function_call": function_calls}
             elif chunk.text:
-                print(chunk.text)
+                # print(chunk.text)
                 yield {"response": chunk.text}
                 contents.append(types.Content(role="user",
                                 parts=[types.Part(text=chunk.text)]))
@@ -132,7 +136,7 @@ async def run():
             print(f"Running agent loop with prompt: {prompt}")
             # Run agent loop
             async for item in agent_loop(prompt, client, session):
-                print(item)
+                # print(item)
                 yield item
            
 
