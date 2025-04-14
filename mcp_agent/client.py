@@ -29,7 +29,9 @@ async def agent_loop(prompt: str, client: genai.Client, session: ClientSession):
         # print(chunk.candidates)
         if chunk.candidates[0].content.parts[0].function_call:
              stream_function_calls = [chunk.candidates[0].content.parts[0].function_call]
-             print(f"Function call: {stream_function_calls}")
+             print(f"function_call: {stream_function_calls}")
+             yield {"function_call": stream_function_calls[0].name}
+
         elif chunk.text:
              print(chunk.text)
              yield {"response": chunk.text}
