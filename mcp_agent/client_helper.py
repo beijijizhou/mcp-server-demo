@@ -7,12 +7,24 @@ from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 import os
 import asyncio
+import functools
 from dotenv import load_dotenv
 load_dotenv()
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 model = "gemini-2.0-flash"
+import time
+from typing import Callable, Any, Coroutine
+def measure_time(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        start_time = time.time()
+        result = func(*args, **kwargs)
+        end_time = time.time()
+        print(f"Function '{func.__name__}' took {end_time - start_time:.4f} seconds")
+        return result
+    return wrapper
 
-
+@measure_time
 async def build_tools(session: ClientSession):
     await session.initialize()
     # --- 1. Get Tools from Session and convert to Gemini Tool objects ---
@@ -27,7 +39,7 @@ async def build_tools(session: ClientSession):
     ])
     return tools
 
-
+@measure_time
 async def get_stream_repsonse(contents, tools):
     stream_response = await client.aio.models.generate_content_stream(
         model=model,  # Or your preferred model supporting function calling
@@ -41,19 +53,7 @@ async def get_stream_repsonse(contents, tools):
     return stream_response
 
 
-async def get_repsonse(contents, tools) -> GenerateContentResponse:
-    response = await client.aio.models.generate_content(
-        model=model,  # Or your preferred model supporting function calling
-        contents=contents,
-        config=types.GenerateContentConfig(
-            temperature=0,
-            tools=[tools],
-        ),
-    )
-    contents.append(response.candidates[0].content)
-    return response
-
-
+@measure_time
 async def get_tools_response(function_calls, session):
     tool_response_parts: List[types.Part] = []
     # --- 4.1 Process all function calls in order and return in this turn ---
@@ -83,55 +83,3 @@ async def get_tools_response(function_calls, session):
         return tool_response_parts
 
 
-async def process_stream_chunk(
-    chunk: GenerateContentResponse,
-    contents: List[Content]
-) -> Optional[dict]:
-    """
-    Processes a single chunk from the streaming response.
-
-    Args:
-        chunk: A GenerateContentResponse object.
-        contents: The list of conversation history contents.
-
-    Yields:
-        A dictionary containing the text response, if available.
-    """
-    if chunk.candidates:
-        first_candidate = chunk.candidates[0]
-        if first_candidate.content and first_candidate.content.parts:
-            part = first_candidate.content.parts[0]
-            print(part)
-            if part.function_call:
-                stream_function_calls = [part.function_call]
-                print(f"Function call: {stream_function_calls}")
-            elif part.text:
-                print(part.text)
-                contents.append(
-                    Content(role="user", parts=[Part(text=part.text)]))
-                return {"response": part.text}
-    elif hasattr(chunk, 'text') and chunk.text:
-        print(chunk.text)
-        contents.append(Content(role="user", parts=[Part(text=chunk.text)]))
-        return {"response": chunk.text}
-    return None
-
-
-async def handle_streaming_response(
-    stream_response: AsyncIterator[GenerateContentResponse],
-    contents: List[Content]
-) -> AsyncIterator[dict]:
-    """
-    Asynchronously handles the streaming response from the model.
-
-    Args:
-        stream_response: An asynchronous iterator of GenerateContentResponse.
-        contents: The list of conversation history contents (will be modified in place).
-
-    Yields:
-        Dictionaries containing the text responses from the stream.
-    """
-    async for chunk in stream_response:
-        result = await process_stream_chunk(chunk, contents)
-        if result:
-            yield result

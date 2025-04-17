@@ -9,8 +9,6 @@ from dotenv import load_dotenv
 from rich import print
 
 
-# Assuming handle_streaming_response is in the same file or correctly imported
-# from mcp_agent.stream_handler import handle_streaming_response
 server_params = StdioServerParameters(
     command="npx",  # Executable
     args=[

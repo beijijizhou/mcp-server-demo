@@ -1,4 +1,4 @@
-from mcp_agent.client_helper import build_tools, get_repsonse, get_stream_repsonse, get_tools_response
+from mcp_agent.client_helper import build_tools, get_stream_repsonse, get_tools_response
 from mcp_agent.mcp_config import js_mcp_server_params
 from typing import AsyncGenerator, List, Optional
 from google import genai
@@ -10,8 +10,6 @@ import asyncio
 from dotenv import load_dotenv
 
 
-# Assuming handle_streaming_response is in the same file or correctly imported
-# from mcp_agent.stream_handler import handle_streaming_response
 
 load_dotenv()
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
