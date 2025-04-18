@@ -1,11 +1,27 @@
+from contextlib import asynccontextmanager
 import json
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from mcp_agent.client import run
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global global_session
+    # Startup: Initialize the session
+    # Replace with your actual js_mcp_server_params
+    # global_session = await initialize_session({})
+    print("ClientSession initialized on startup (using lifespan).")
+    yield
+    # Shutdown: Clean up resources if needed
+    if global_session:
+        # Example of potential cleanup (if your ClientSession has a close method)
+        # await global_session.close()
+        print("ClientSession shutdown (if applicable).")
+        global_session = None
 
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
+
 
 # More specific CORS configuration
 app.add_middleware(
@@ -37,6 +53,7 @@ async def health_check():
 @app.get("/")
 async def root():
     return {"message": "Welcome to the API", "status": "ok"}
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("app:app", host="0.0.0.0", port=5000)
