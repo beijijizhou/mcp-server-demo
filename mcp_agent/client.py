@@ -9,6 +9,8 @@ import os
 import asyncio
 from dotenv import load_dotenv
 
+from mcp_agent.session_manager import create_session
+
 
 
 load_dotenv()
@@ -75,13 +77,7 @@ async def agent_loop(prompt: str, client: genai.Client, session: ClientSession):
     # --- 5. Return Final Response ---
     return
 
-async def create_session(js_mcp_server_params: dict) -> AsyncGenerator[ClientSession, None]:
-    """
-    Creates a ClientSession within the context of a stdio client.
-    """
-    async with stdio_client(js_mcp_server_params) as (read, write):
-        async with ClientSession(read, write) as session:
-            yield session
+
 async def run(prompt):
     async for session in create_session(js_mcp_server_params):
         print(f"Running agent loop with prompt: {prompt}")

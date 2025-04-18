@@ -5,20 +5,16 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from mcp_agent.client import run
+from mcp_agent.session_manager import close_global_session, get_global_session
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global global_session
     # Startup: Initialize the session
-    # Replace with your actual js_mcp_server_params
-    # global_session = await initialize_session({})
+    # Replace with your actual js_mcp_server_params in session_manager.py if needed
+    # await get_global_session()
     print("ClientSession initialized on startup (using lifespan).")
     yield
-    # Shutdown: Clean up resources if needed
-    if global_session:
-        # Example of potential cleanup (if your ClientSession has a close method)
-        # await global_session.close()
-        print("ClientSession shutdown (if applicable).")
-        global_session = None
+    # Shutdown: Clean up resources
+    # await close_global_session()
 
 app = FastAPI(lifespan=lifespan)
 
