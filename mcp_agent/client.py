@@ -91,10 +91,3 @@ async def run(prompt):
                 yield item
 
 
-async def main():
-    async for item in run():  # Consume the async generator
-        pass
-    # print(res.text)
-
-if __name__ == "__main__":
-    asyncio.run(main())
