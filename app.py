@@ -5,19 +5,18 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from mcp_agent.client import run
-from mcp_agent.session_manager import close_global_session, get_global_session
+from mcp_agent.session_manager import create_session
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: Initialize the session
-    # Replace with your actual js_mcp_server_params in session_manager.py if needed
-    # await get_global_session()
-    print("ClientSession initialized on startup (using lifespan).")
+    global sessions
+   
+    async for session in create_session():  # Assuming create_session is defined
+        sessions.append(session)
     yield
-    # Shutdown: Clean up resources
-    # await close_global_session()
+    print(f"Initialized sessions: {sessions}")
 
 app = FastAPI(lifespan=lifespan)
-
+sessions = []
 
 # More specific CORS configuration
 app.add_middleware(
@@ -40,6 +39,7 @@ async def stream_response(prompt: str):
 async def query_endpoint(query: QueryRequest):
     if not query.prompt.strip():
         raise HTTPException(status_code=400, detail="Prompt cannot be empty")
+    print(sessions)
     print(query)
     return StreamingResponse(stream_response(query.prompt), media_type="text/event-stream")
 

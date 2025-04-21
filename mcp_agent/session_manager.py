@@ -3,7 +3,7 @@ from typing import AsyncGenerator
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
-
+from mcp_agent.mcp_config import js_mcp_server_params
 global_session: ClientSession | None = None
 
 async def initialize_session(js_mcp_server_params: dict) -> ClientSession:
@@ -38,7 +38,7 @@ async def close_global_session():
         global_session = None
         print("Global session reset (no close method).")
         
-async def create_session(js_mcp_server_params: dict) -> AsyncGenerator[ClientSession, None]:
+async def create_session() -> AsyncGenerator[ClientSession, None]:
     """
     Creates a ClientSession within the context of a stdio client.
     """

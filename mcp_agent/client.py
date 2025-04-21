@@ -79,7 +79,7 @@ async def agent_loop(prompt: str, client: genai.Client, session: ClientSession):
 
 
 async def run(prompt):
-    async for session in create_session(js_mcp_server_params):
+    async for session in create_session():
         print(f"Running agent loop with prompt: {prompt}")
         async for item in agent_loop(prompt, client, session):
             yield item
