@@ -18,7 +18,7 @@ client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 model = "gemini-2.0-flash"
 
 
-async def agent_loop(prompt: str, client: genai.Client, session: ClientSession):
+async def agent_loop(prompt: str, session: ClientSession):
     contents = [types.Content(role="user", parts=[types.Part(text=prompt)])]
     # Initialize the connection
     tools = await build_tools(session)
@@ -78,10 +78,12 @@ async def agent_loop(prompt: str, client: genai.Client, session: ClientSession):
     return
 
 
-async def run(prompt):
+async def run(prompt,session: Optional[List[ClientSession]] = None) -> AsyncGenerator[dict, None]:
+    print("Running agent loop...")
+    print(session)
     async for session in create_session():
-        print(f"Running agent loop with prompt: {prompt}")
-        async for item in agent_loop(prompt, client, session):
+        # print(f"Running agent loop with prompt: {prompt}")
+        async for item in agent_loop(prompt,  session):
             yield item
 
 

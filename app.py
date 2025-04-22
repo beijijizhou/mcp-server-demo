@@ -9,7 +9,7 @@ from mcp_agent.session_manager import create_session
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global sessions
-   
+    
     async for session in create_session():  # Assuming create_session is defined
         sessions.append(session)
     yield
@@ -32,7 +32,7 @@ class QueryRequest(BaseModel):
     prompt: str
 
 async def stream_response(prompt: str):
-    async for item in run(prompt):
+    async for item in run(prompt, sessions):
         yield json.dumps(item) + "\n"
 
 @app.post("/query")
