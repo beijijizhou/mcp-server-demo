@@ -43,7 +43,7 @@ async def agent_loop(prompt: str, session: ClientSession):
     if stream_function_calls:
         turn_count += 1
         tool_response_parts = await get_tools_response(stream_function_calls, session)
-
+        yield {"function_call": "finish function call"}
         contents.append(types.Content(role="user", parts=tool_response_parts))
         print(
             f"Added {len(tool_response_parts)} tool response parts to history.")
