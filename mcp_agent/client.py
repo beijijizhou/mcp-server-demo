@@ -78,9 +78,9 @@ async def agent_loop(prompt: str, session: ClientSession):
     return
 
 
-async def run(prompt,session: Optional[List[ClientSession]] = None) -> AsyncGenerator[dict, None]:
+async def run(prompt,sessions: Optional[List[ClientSession]] = None) -> AsyncGenerator[dict, None]:
     print("Running agent loop...")
-    print(session)
+    # print(session)
     async for session in create_session():
         # print(f"Running agent loop with prompt: {prompt}")
         async for item in agent_loop(prompt,  session):

@@ -39,7 +39,7 @@ async def stream_response(prompt: str):
 async def query_endpoint(query: QueryRequest):
     if not query.prompt.strip():
         raise HTTPException(status_code=400, detail="Prompt cannot be empty")
-    print(sessions)
+    # print(sessions)
     print(query)
     return StreamingResponse(stream_response(query.prompt), media_type="text/event-stream")
 
