@@ -17,12 +17,15 @@ load_dotenv()
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 model = "gemini-2.0-flash"
 
-
+conversation_history = []
 async def agent_loop(prompt: str, session: ClientSession):
-    contents = [types.Content(role="user", parts=[types.Part(text=prompt)])]
+    
     # Initialize the connection
+    user_content = types.Content(role="user", parts=[types.Part(text=prompt)])
+    conversation_history.append(user_content)
+
     tools = await build_tools(session)
-    response = await get_stream_repsonse(contents, tools)
+    response = await get_stream_repsonse(conversation_history, tools)
     stream_function_calls = None
     
     async for chunk in response:
@@ -35,8 +38,8 @@ async def agent_loop(prompt: str, session: ClientSession):
         elif chunk.text:
              print(chunk.text)
              yield {"response": chunk.text}
-    contents.append(chunk.candidates[0].content)
-    
+    conversation_history.append(chunk.candidates[0].content)
+    print(conversation_history)
     turn_count = 0
     max_tool_turns = 5
     if not stream_function_calls: return
@@ -44,13 +47,13 @@ async def agent_loop(prompt: str, session: ClientSession):
         turn_count += 1
         tool_response_parts = await get_tools_response(stream_function_calls, session)
         yield {"function_call": "finish function call"}
-        contents.append(types.Content(role="user", parts=tool_response_parts))
+        conversation_history.append(types.Content(role="user", parts=tool_response_parts))
         print(
             f"Added {len(tool_response_parts)} tool response parts to history.")
 
         # --- 4.3 Make the next call to the model with updated history ---
         print("Making subsequent API call with tool responses...")
-        response = await get_stream_repsonse(contents, tools)
+        response = await get_stream_repsonse(conversation_history, tools)
         async for chunk in response:
             # print(len(chunk.candidates) > 0)
             if chunk.candidates[0].content.parts[0].function_call:
@@ -61,7 +64,7 @@ async def agent_loop(prompt: str, session: ClientSession):
             elif chunk.text:
                 print(chunk.text)
                 # print(chunk.candidates[0].content)
-                contents.append(chunk.candidates[0].content)
+                conversation_history.append(chunk.candidates[0].content)
                 yield {"response": chunk.text}
                 # contents.append(types.Content(role="user",
                 #                 parts=[types.Part(text=chunk.text)]))
